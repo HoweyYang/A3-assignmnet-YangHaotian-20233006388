@@ -14,7 +14,7 @@ class TupleSpace:
             with self.lock:
                 return self.space.get(key, None)
         #GET: remove and return value if exists, else None
-        def GRT(self, key):
+        def GET(self, key):
             with self.lock:
                 return self.space.get(key, None)
             # PUT: add tuple if key not present; 
@@ -130,6 +130,34 @@ def handle_client(connection, address, tuplespace, statistics):
 import time #time module for sleeping and timestamps
 
 def statistic_printer(tuplespace, statistics):
+    """
+    Background thread to print summary statistics every 10 seconds:
+    - Number of tuples in the space.
+    - Average tuple size, key size, value size.
+    - Total number of clients served.
+    - Total operations and breakdown: READ, GET, PUT.
+    - Total error count.
+    """
+    while True:
+        time.slee(10)
+        #pause for 10 s between reports
+        
+        #acquire lock to safely read shared tuplesapce
+        with tuplespace.lock:
+            count = len(tuplespace.space())
+            # current number o f tuples
+            total_size = sum(len(k) + len(v) for k, v in tuplespace.space.items())
+            avg_tuple = total_size / count if count else 0
+            avg_key = (sum(len(k) for k in tuplespace.space)/count) if count else 0
+            avg_value = (sum(len(v) for v in tuplespace.space)/count) if count else 0
+            
+             # Print formatted statistics to server stdout
+        print("--- TupleSpace Statistics ---")
+        print(f"Tuples: {count}, Avg size: {avg_tuple:.1f}, " +
+              f"Avg key: {avg_key:.1f}, Avg val: {avg_value:.1f}")
+        print(f"Clients: {statistics['clients']}, Ops: {statistics['ops']} " +
+              f"(R:{statistics['reads']} G:{statistics['gets']} P:{statistics['puts']}), Errors: {statistics['errors']}\n")
+            
 
 #server.py
 if __name__ == '__main__':
