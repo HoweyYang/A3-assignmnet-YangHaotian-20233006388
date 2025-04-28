@@ -156,10 +156,8 @@ def statistic_printer(tuplespace, statistics):
 
         # Print formatted statistics to server stdout
         print("--- TupleSpace Statistics ---")
-        print(f"Tuples: {count}, Avg size: {avg_tuple:.1f}, " +
-              f"Avg key: {avg_key:.1f}, Avg val: {avg_value:.1f}")
-        print(f"Clients: {statistics['clients']}, Ops: {statistics['operations']} " +
-              f"(R:{statistics['reads']} G:{statistics['gets']} P:{statistics['puts']}), Errors: {statistics['errors']}\n")
+        print(f"Tuples: {count}, Avg size: {avg_tuple:.1f}, " + f"Avg key: {avg_key:.1f}, Avg val: {avg_value:.1f}")
+        print(f"Clients: {statistics['clients']}, Ops: {statistics['operations']} " + f"(R:{statistics['reads']} G:{statistics['gets']} P:{statistics['puts']}), Errors: {statistics['errors']}\n")
 
 
 if __name__ == '__main__':

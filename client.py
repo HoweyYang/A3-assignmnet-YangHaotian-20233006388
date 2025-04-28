@@ -42,7 +42,7 @@ if __name__ == '__main__':
         with open(args.file, 'r') as f:
             #open the file in binary mode
             for line in f:
-                lien = line.strip()
+                line = line.strip()
                 #strip whitespace
                 if not line:
                     continue
@@ -53,44 +53,61 @@ if __name__ == '__main__':
                 #protocol establishment
                 if operation == 'PUT':
                     if len(parts) < 3:
-                        print(f"invalid PUT entry: {line}")
+                        print(f"Invalid PUT entry: {line}")
                         continue
                     # extract the key and value from the parts
                     key, value = parts[1]. parts[2]
                     if len(key) + 1 + len(value) > 970:
-                        print(f"entry too long:{line}")
+                        print(f"Entry too long:{line}")
                         continue
                     #construct the payload of PUT
-                    payload = f"P{key}{value}"
+                    payload = f"P{key} {value}"
                 elif operation == 'READ':
                     if len(parts) < 2:
-                        print(f"invalid READ entry: {line}")
+                        print(f"Invalid READ entry: {line}")
                         continue
                     # extract the key from the parts
                     key = parts[1]
                     if len(key) > 970:
-                        print(f"entry too long:{line}")
+                        print(f"Entry too long:{line}")
                         continue
                     #construct the payload of READ
                     payload = f"R{key}"
                 elif operation == 'GET':
                     if len(parts) < 2:
-                        print(f"invalid GET entry: {line}")
+                        print(f"Invalid GET entry: {line}")
                         continue
                     # extract the key from the parts
                     key = parts[1]
                     if len(key) > 970:
-                        print(f"entry too long, skipping:{line}")
+                        print(f"Entry too long, skipping:{line}")
                         continue
                     #construct the payload of GET
                     payload = f"G{key}"
                 else:
-                    print(f"unkonwn opperation, skipping:{line}")
+                    print(f"Unknown operation, skipping:{line}")
                     continue
-                    
-                    
+                #prepend 3-byte length for payload
+                raw = payload.encode()
+                message = f"{len(raw) + 3:03d}".encode() + raw
+                # send the entire message to server
+                sock.sendall(message)
                 
-            
+                header = recvn(socket, 3)
+                if header is None:
+                    print("Connection closed by server")
+                    break
+                #get the length of the response
+                length = int (header)
+                #recieve the response
+                boidy = recvn(sock, length - 3)
+                if body is None:
+                    print("Connection closed by server during recv")
+                    break
+                #decode the response
+                response = body.decode().strip()
+                #print the response
+                print(f"{line}: {response}")
                     
                     
                 
