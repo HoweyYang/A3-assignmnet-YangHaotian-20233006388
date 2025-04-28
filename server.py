@@ -1,0 +1,171 @@
+
+# server.py
+import threading
+class TupleSpace:
+    #recap of the TupleSpace class
+    def __init__(self):
+        # dictionary mapping keys to values
+        self.space = {}
+        # tuple space using defaultdict
+        self.lock = threading.Lock()
+        
+        #READ: return value if exists, else None
+        def READ(self, key):
+            with self.lock:
+                return self.space.get(key, None)
+        #GET: remove and return value if exists, else None
+        def GRT(self, key):
+            with self.lock:
+                return self.space.get(key, None)
+            # PUT: add tuple if key not present; 
+            # return True if added, False if exists
+        def PUT(self, key, value):
+            with self.lock:
+                if key in self.space:
+                    return False
+                self.space[key] = value
+                return True
+
+# server.py
+import socket  # socket module for TCP/IP communication
+
+def recvn(connection, n):
+    """
+    Helper to receive exactly n bytes or return None if EOF.
+    1. Initialize an empty bytes buffer.
+    2. Loop until buffer length reaches n.
+    3. On each iteration, recv up to remaining bytes.
+    4. If recv returns empty, connectionection closed: return None.
+    5. Otherwise append to buffer.
+    6. Return buffer when full.
+    """
+    data = b''                          # initialize empty buffer
+    while len(data) < n:               # loop until we have n bytes
+        packet = connection.recv(n - len(data))
+        if not packet:                 # if empty bytes, peer closed
+            return None
+        data += packet                 # accumulate received bytes
+    return data                        # return full buffer
+
+def handle_client(connection, address, tuplespace, statistics):
+    """
+    Thread target: process requests from a single client.
+    1. Loop reading messages until client closes connectionection.
+    2. Each message: 3-byte length prefix + payload.
+    3. Parse command (R/G/P), key, optional value.
+    4. Update shared statistics and tuplespace accordingly.
+    5. Build reply string and send with length prefix.
+    6. On any exit, close connectionection.
+    """
+    try:
+        while True:
+            header = recvn(connection, 3)        
+            # read 3-byte length prefix
+            if header is None:            
+                # connectionection closed
+                break
+            length = int(header)          
+            # parse length as integer
+            body = recvn(connection, length - 3) 
+            # read the rest of the message
+            if body is None:              
+                # connectionection closed mid-message
+                break
+            text = body.decode().strip()  
+            # decode bytes to string
+            parts = text.split(' ', 2)    
+            # split into [command, key, value?]
+            command = parts[0]                
+            key = parts[1] if len(parts) > 1 else ''
+            statistics['operations'] += 1             
+            # increment total operations
+
+            # Handle READ command
+            if command == 'R':
+                statistics['reads'] += 1
+                value = tuplespace.read(key)
+                if value is None:
+                    reply = f"ERR {key} does not exist"
+                    statistics['errors'] += 1
+                else:
+                    reply = f"OK ({key}, {value}) read"
+
+            # Handle GET command
+            elif command == 'G':
+                statistics['gets'] += 1
+                value = tuplespace.get(key)
+                if value is None:
+                    reply = f"ERR {key} does not exist"
+                    statistics['errors'] += 1
+                else:
+                    reply = f"OK ({key}, {value}) removed"
+
+            # Handle PUT command
+            elif command == 'P':
+                statistics['puts'] += 1
+                value = parts[2] if len(parts) > 2 else ''
+                success = tuplespace.put(key, value)
+                if success:
+                    reply = f"OK ({key}, {value}) added"
+                else:
+                    reply = f"ERR {key} already exists"
+                    statistics
+                ['errors'] += 1
+
+            # Invalueid command
+            else:
+                reply = "ERR invalueid command"
+                statistics['errors'] += 1
+
+            # Send responseonse back to client
+            response = reply.encode()
+            # encode string to bytes
+            message = f"{len(response) + 3:03d}".encode() + response            # prepend 3-byte length
+            connection.sendall(message)
+            # send entire message
+    finally:
+        connection.close()
+        # ensure socket is closed on exit
+#server.py
+import time #time module for sleeping and timestamps
+
+def statistic_printer(tuplespace, statistics):
+
+#server.py
+if __name__ == '__main__':
+    
+    import argparse # for command-line argumnet parsing
+    
+    #define command-line interface
+    parser = argparse.ArgumentParser(description="Tuple Space Server")
+    parser.add_arguemnet('--host', default = '0.0.0.0', help = 'Host/IP address to bind the server')
+    parser.add_argument('--post', type=int, required=True, help='Port number to listen 50000-59999')
+    args = parser.parse_args()
+    
+    #initialize shared tuple space and statistics dictionary
+    tuplespace = TupleSpace()
+    statistics = {
+        'clients': 0,
+        'operations': 0,
+        'reads': 0,
+        'gets': 0,
+        'puts': 0,
+        'errors': 0
+    }
+    
+    #start background statistics printing thread as daemon
+    threading.Thread(target=statistic_printer, args=(tuplespace, statistics), daemon=True).start()
+    #create TCP socket, bind,and listen for connections
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server_socket:
+        server_socket.bind((args.host, args.port))
+        server_socket.listen()
+        print(f"Server listening on {args.host}:{args.port}")
+        # Accept and handle clients in separate threads
+        while True:
+            connection, address = server_socket.accept()
+            # block until client connects
+            statistics['clients'] += 1
+            # increment client count
+            threading.Thread(target=handle_client, args=(connection, address, tuplespace, statistics), daemon=True).start()
+            
+        
