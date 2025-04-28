@@ -1,0 +1,3 @@
+PUT key1 value1
+READ key1
+GET key1

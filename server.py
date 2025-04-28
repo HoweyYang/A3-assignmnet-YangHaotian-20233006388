@@ -68,14 +68,14 @@ def handle_client(connection, address, tuplespace, statistics):
             if header is None:
                 # connection closed
                 break
-            length = int(header)
+            length = int(header.decode('utf-8'))
             # parse length as integer
             body = recvn(connection, length - 3)
             # read the rest of the message
             if body is None:
                 # connection closed mid-message
                 break
-            text = body.decode().strip()
+            text = body.decode('utf-8').strip()
             # decode bytes to string
             parts = text.split(' ', 2)
             # split into [command, key, value?]
@@ -121,9 +121,9 @@ def handle_client(connection, address, tuplespace, statistics):
                 statistics['errors'] += 1
 
             # Send response back to client
-            response = reply.encode()
+            response = reply.encode('utf-8')
             # encode string to bytes
-            message = f"{len(response) + 3:03d}".encode() + response
+            message = f"{len(response) + 3:03d}".encode('utf-8') + response
             # prepend 3-byte length
             connection.sendall(message)
             # send entire message

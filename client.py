@@ -56,7 +56,7 @@ if __name__ == '__main__':
                         print(f"Invalid PUT entry: {line}")
                         continue
                     # extract the key and value from the parts
-                    key, value = parts[1]. parts[2]
+                    key, value = parts[1], parts[2]
                     if len(key) + 1 + len(value) > 970:
                         print(f"Entry too long:{line}")
                         continue
@@ -88,24 +88,24 @@ if __name__ == '__main__':
                     print(f"Unknown operation, skipping:{line}")
                     continue
                 #prepend 3-byte length for payload
-                raw = payload.encode()
-                message = f"{len(raw) + 3:03d}".encode() + raw
+                raw = payload.encode('utf-8')
+                message = f"{len(raw) + 3:03d}".encode('utf-8') + raw
                 # send the entire message to server
                 sock.sendall(message)
                 
-                header = recvn(socket, 3)
+                header = recvn(sock, 3)
                 if header is None:
                     print("Connection closed by server")
                     break
                 #get the length of the response
-                length = int (header)
+                length = int (header.decode('utf-8'))
                 #recieve the response
-                boidy = recvn(sock, length - 3)
+                body = recvn(sock, length - 3)
                 if body is None:
                     print("Connection closed by server during recv")
                     break
                 #decode the response
-                response = body.decode().strip()
+                response = body.decode('utf-8').strip()
                 #print the response
                 print(f"{line}: {response}")
                     
