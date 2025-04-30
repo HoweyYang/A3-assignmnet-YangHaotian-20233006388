@@ -1,3 +1,5 @@
+
+
 #client.py
 import socket   # for TCP/IP sockets
 import argparse # for command-line parsing
@@ -6,7 +8,7 @@ import sys      # for sys.exit
 
 def recvn(sock, n):
     """
-    Helper to recieve exactly n bytes or return None if EOF.
+    Helper to receive exactly n bytes or return None if EOF.
     Same logic as server's recvn
     Args:sock (socket.socket): The socket object from which to receive data.
     n (int): The number of bytes to receive.
@@ -61,7 +63,7 @@ if __name__ == '__main__':
                         print(f"Entry too long:{line}")
                         continue
                     #construct the payload of PUT
-                    payload = f"P{key} {value}"
+                    payload = f"PUT {key} {value}"
                 elif operation == 'READ':
                     if len(parts) < 2:
                         print(f"Invalid READ entry: {line}")
@@ -72,7 +74,7 @@ if __name__ == '__main__':
                         print(f"Entry too long:{line}")
                         continue
                     #construct the payload of READ
-                    payload = f"R{key}"
+                    payload = f"READ {key}"
                 elif operation == 'GET':
                     if len(parts) < 2:
                         print(f"Invalid GET entry: {line}")
@@ -83,7 +85,7 @@ if __name__ == '__main__':
                         print(f"Entry too long, skipping:{line}")
                         continue
                     #construct the payload of GET
-                    payload = f"G{key}"
+                    payload = f"GET {key}"
                 else:
                     print(f"Unknown operation, skipping:{line}")
                     continue
@@ -99,7 +101,7 @@ if __name__ == '__main__':
                     break
                 #get the length of the response
                 length = int (header.decode('utf-8'))
-                #recieve the response
+                #recve the response
                 body = recvn(sock, length - 3)
                 if body is None:
                     print("Connection closed by server during recv")
