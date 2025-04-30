@@ -85,9 +85,9 @@ def handle_client(connection, address, tuplespace, statistics):
             # increment total operations
 
             # Handle READ command
-            if command == 'R':
+            if command == 'READ':
                 statistics['reads'] += 1
-                value = tuplespace.read(key)
+                value = tuplespace.READ(key)
                 if value is None:
                     reply = f"ERR {key} does not exist"
                     statistics['errors'] += 1
@@ -95,9 +95,9 @@ def handle_client(connection, address, tuplespace, statistics):
                     reply = f"OK ({key}, {value}) read"
 
             # Handle GET command
-            elif command == 'G':
+            elif command == 'GET':
                 statistics['gets'] += 1
-                value = tuplespace.get(key)
+                value = tuplespace.GET(key)
                 if value is None:
                     reply = f"ERR {key} does not exist"
                     statistics['errors'] += 1
@@ -105,10 +105,10 @@ def handle_client(connection, address, tuplespace, statistics):
                     reply = f"OK ({key}, {value}) removed"
 
             # Handle PUT command
-            elif command == 'P':
+            elif command == 'PUT':
                 statistics['puts'] += 1
                 value = parts[2] if len(parts) > 2 else ''
-                success = tuplespace.put(key, value)
+                success = tuplespace.PUT(key, value)
                 if success:
                     reply = f"OK ({key}, {value}) added"
                 else:
@@ -157,7 +157,7 @@ def statistic_printer(tuplespace, statistics):
         # Print formatted statistics to server stdout
         print("--- TupleSpace Statistics ---")
         print(f"Tuples: {count}, Avg size: {avg_tuple:.1f}, " + f"Avg key: {avg_key:.1f}, Avg val: {avg_value:.1f}")
-        print(f"Clients: {statistics['clients']}, Ops: {statistics['operations']} " + f"(R:{statistics['reads']} G:{statistics['gets']} P:{statistics['puts']}), Errors: {statistics['errors']}\n")
+        print(f"Clients: {statistics['clients']}, Operations: {statistics['operations']} " + f"(READ:{statistics['reads']} GET:{statistics['gets']} PUT:{statistics['puts']}), Errors: {statistics['errors']}\n")
 
 
 if __name__ == '__main__':
